@@ -17,7 +17,7 @@ DEPENDENCIES = ["uart"]
 t6713_ns = cg.esphome_ns.namespace("t6713")
 T6713Component = t6713_ns.class_("T6713Component", cg.PollingComponent, uart.UARTDevice)
 
-CONFIG_SCHEMA = sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 1).extend(
+CONFIG_SCHEMA = sensor.sensor_schema().extend(
         {
             cv.GenerateID(): cv.declare_id(T6713Component),
             cv.Required(CONF_CO2): sensor.sensor_schema(
