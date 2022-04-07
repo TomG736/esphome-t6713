@@ -1,1 +1,1 @@
-# t6713-esphome
+# esphome-t6713
