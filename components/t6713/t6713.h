@@ -6,7 +6,7 @@
 #include "esphome/components/uart/uart.h"
 
 namespace esphome {
-namespace t6615 {
+namespace t6713 {
 
 enum class T6713Command : uint8_t {
   NONE = 0,
@@ -40,5 +40,5 @@ class T6713Component : public PollingComponent, public uart::UARTDevice {
   sensor::Sensor *co2_sensor_{nullptr};
 };
 
-}  // namespace t6615
+}  // namespace t6713
 }  // namespace esphome
