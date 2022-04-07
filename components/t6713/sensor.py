@@ -7,6 +7,8 @@ from esphome.const import (
     DEVICE_CLASS_CARBON_DIOXIDE,
     STATE_CLASS_MEASUREMENT,
     UNIT_PARTS_PER_MILLION,
+    ICON_EMPTY,
+    UNIT_EMPTY
 )
 
 CODEOWNERS = ["@TomG736"]
@@ -15,8 +17,7 @@ DEPENDENCIES = ["uart"]
 t6713_ns = cg.esphome_ns.namespace("t6713")
 T6713Component = t6713_ns.class_("T6713Component", cg.PollingComponent, uart.UARTDevice)
 
-CONFIG_SCHEMA = (
-    cv.Schema(
+CONFIG_SCHEMA = sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 1).extend(
         {
             cv.GenerateID(): cv.declare_id(T6713Component),
             cv.Required(CONF_CO2): sensor.sensor_schema(
@@ -26,10 +27,11 @@ CONFIG_SCHEMA = (
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
         }
+    ).extend(
+        cv.polling_component_schema("60s")
+    ).extend(
+        uart.UART_DEVICE_SCHEMA
     )
-    .extend(cv.polling_component_schema("60s"))
-    .extend(uart.UART_DEVICE_SCHEMA)
-)
 
 FINAL_VALIDATE_SCHEMA = uart.final_validate_device_schema(
     "t6713", baud_rate=19200, require_rx=True, require_tx=True
