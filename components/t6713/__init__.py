@@ -35,7 +35,7 @@ from esphome.const import (
     UNIT_PARTS_PER_MILLION,
 )
 
-CODEOWNERS = ["@skierz"]
+CODEOWNERS = ["@TomG736"]
 DEPENDENCIES = ["uart"]
 
 t6713_ns = cg.esphome_ns.namespace("t6713")
