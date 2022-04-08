@@ -29,6 +29,7 @@ void T6713Component::send_ppm_command_() {
   this->write_array(T6713_COMMAND_GET_PPM, sizeof(T6713_COMMAND_GET_PPM));
   this->write_byte(0x46);
   this->write_byte(0x70);
+  ESP_LOGW(TAG, "Sent PPM Request");
 }
 
 void T6713Component::loop() {
@@ -70,6 +71,7 @@ void T6713Component::loop() {
       break;
     }
     default:
+      ESP_LOGW(TAG, "unknown response");
       break;
   }
   this->command_time_ = 0;
