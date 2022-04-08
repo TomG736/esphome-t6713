@@ -108,8 +108,11 @@ void T6713Component::loop() {
       /* command got eaten, clear the buffer and fire another */
       while (this->available())
         this->read();
-      if(failCount >= 5){
-        this->scan_modbus();
+      if(failCount >= 255){
+        failCount = 0;
+        this->command_time_ = 0;
+        this->command_ = T6713Command::NONE;
+        ESP_LOGE(TAG, "No T6713 Found");
         return;
       }
       this->scan_modbus(failCount);
