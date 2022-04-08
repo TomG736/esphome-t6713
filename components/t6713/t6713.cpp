@@ -1,6 +1,9 @@
 #include "t6713.h"
 #include "esphome/core/log.h"
 
+#define LSB(x) (x & 0xFF)
+#define MSB(x) ((x >> 8) & 0xFF)
+
 namespace esphome {
 namespace t6713 {
 
@@ -10,6 +13,13 @@ static const uint32_t T6713_TIMEOUT = 1000;
 // static const uint8_t T6713_MAGIC = 0xFF;
 // static const uint8_t T6713_ADDR_HOST = 0xFA;
 static const uint8_t T6713_ADDR_SENSOR = 0x15;
+
+static const uint8_t T6713_READ_FUNCTION = 0x04;
+
+static const uint16_t T6713_FIRMWARE_REGISTER = 0x1389;
+static const uint16_t T6713_STATUS_REGISTER = 0x138A;
+static const uint16_t T6713_PPM_REGISTER = 0x138B;
+
 static const uint8_t T6713_COMMAND_GET_PPM[] = {0x00, 0x01};
 static const uint8_t T6713_COMMAND_GET_SERIAL[] = {0x02, 0x01};
 static const uint8_t T6713_COMMAND_GET_VERSION[] = {0x02, 0x0D};
@@ -19,17 +29,50 @@ static const uint8_t T6713_COMMAND_ENABLE_ABC[] = {0xB7, 0x01};
 static const uint8_t T6713_COMMAND_DISABLE_ABC[] = {0xB7, 0x02};
 static const uint8_t T6713_COMMAND_SET_ELEVATION[] = {0x03, 0x0F};
 
+// Compute the MODBUS RTU CRC
+uint16_t ModRTU_CRC(byte[] buf, int len)
+{
+  uint16_t crc = 0xFFFF;
+  
+  for (int pos = 0; pos < len; pos++) {
+    crc ^= (uint16_t)buf[pos];          // XOR byte into least sig. byte of crc
+  
+    for (int i = 8; i != 0; i--) {    // Loop over each bit
+      if ((crc & 0x0001) != 0) {      // If the LSB is set
+        crc >>= 1;                    // Shift right and XOR 0xA001
+        crc ^= 0xA001;
+      }
+      else                            // Else LSB is not set
+        crc >>= 1;                    // Just shift right
+    }
+  }
+  // Note, this number has low and high bytes swapped, so use it accordingly (or swap bytes)
+  return crc;  
+}
+
+void T6713Component::send_read_command_(uint8_t function_code, uint16_t register_address, uint16_t readLen){
+  uint16_t crc = 0xFFFF;
+  uint8_t message[16];
+  uint8_t messageLen = 0;
+
+  message[0] = T6713_ADDR_SENSOR;
+  message[1] = function_code);
+  message[2] = MSB(register_address);
+  message[3] = LSB(register_address);
+  message[4] = MSB(readLen);
+  message[5] = LSB(readLen);
+  messageLen = 6;
+  crc = ModRTU_CRC(message, messageLen);
+  message[6] = MSB(crc);
+  message[7] = LSB(crc);
+  this->write_bytes(message, messageLen);
+}
+
 void T6713Component::send_ppm_command_() {
   this->command_time_ = millis();
   this->command_ = T6713Command::GET_PPM;
-  this->write_byte(T6713_ADDR_SENSOR);
-  this->write_byte(0x04);
-  this->write_byte(0x13);
-  this->write_byte(0x8b);
-  this->write_array(T6713_COMMAND_GET_PPM, sizeof(T6713_COMMAND_GET_PPM));
-  this->write_byte(0x46);
-  this->write_byte(0x70);
-  ESP_LOGW(TAG, "Sent PPM Request");
+  send_read_command_(T6713_READ_FUNCTION, T6713_PPM_REGISTER, 1);
+  ESP_LOGD(TAG, "Sent PPM Request");
 }
 
 void T6713Component::loop() {
