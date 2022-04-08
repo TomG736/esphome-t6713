@@ -30,7 +30,7 @@ static const uint8_t T6713_COMMAND_DISABLE_ABC[] = {0xB7, 0x02};
 static const uint8_t T6713_COMMAND_SET_ELEVATION[] = {0x03, 0x0F};
 
 // Compute the MODBUS RTU CRC
-uint16_t ModRTU_CRC(byte[] buf, int len)
+uint16_t ModRTU_CRC(uint8_t[] buf, int len)
 {
   uint16_t crc = 0xFFFF;
   
