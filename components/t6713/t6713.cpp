@@ -149,7 +149,7 @@ void T6713Component::loop() {
     }
     case T6713Command::GET_VERSION: {
       ESP_LOGD(TAG, "T6713 Detected at %i", failCount);
-      failCoint = 0;
+      failCount = 0;
       this->send_ppm_command_();
       break;
     }
