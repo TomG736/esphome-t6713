@@ -56,7 +56,7 @@ void T6713Component::send_read_command_(uint8_t function_code, uint16_t register
   uint8_t messageLen = 0;
 
   message[0] = T6713_ADDR_SENSOR;
-  message[1] = function_code);
+  message[1] = function_code;
   message[2] = MSB(register_address);
   message[3] = LSB(register_address);
   message[4] = MSB(readLen);
@@ -65,7 +65,7 @@ void T6713Component::send_read_command_(uint8_t function_code, uint16_t register
   crc = ModRTU_CRC(message, messageLen);
   message[6] = MSB(crc);
   message[7] = LSB(crc);
-  this->write_bytes(message, messageLen);
+  this->write_array(message, messageLen);
 }
 
 void T6713Component::send_ppm_command_() {
