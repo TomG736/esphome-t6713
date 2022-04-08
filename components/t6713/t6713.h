@@ -34,6 +34,7 @@ class T6713Component : public PollingComponent, public uart::UARTDevice {
   void query_ppm_();
   void send_ppm_command_();
   void send_read_command_(uint8_t function_code, uint16_t register_address, uint16_t readLen);
+  void scan_modbus(uint8_t address);
 
   T6713Command command_ = T6713Command::NONE;
   uint32_t command_time_ = 0;

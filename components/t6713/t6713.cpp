@@ -12,7 +12,8 @@ static const char *const TAG = "t6713";
 static const uint32_t T6713_TIMEOUT = 1000;
 // static const uint8_t T6713_MAGIC = 0xFF;
 // static const uint8_t T6713_ADDR_HOST = 0xFA;
-static const uint8_t T6713_ADDR_SENSOR = 0x15;
+#define T6713_ADDR_DEFAULT 0x15
+static uint8_t T6713_ADDR_SENSOR = T6713_ADDR_DEFAULT;
 
 static const uint8_t T6713_READ_FUNCTION = 0x04;
 
@@ -28,6 +29,8 @@ static const uint8_t T6713_COMMAND_GET_ABC[] = {0xB7, 0x00};
 static const uint8_t T6713_COMMAND_ENABLE_ABC[] = {0xB7, 0x01};
 static const uint8_t T6713_COMMAND_DISABLE_ABC[] = {0xB7, 0x02};
 static const uint8_t T6713_COMMAND_SET_ELEVATION[] = {0x03, 0x0F};
+
+uint8_t failCount = 0;
 
 // Compute the MODBUS RTU CRC
 uint16_t ModRTU_CRC(uint8_t* buf, int len)
@@ -76,14 +79,40 @@ void T6713Component::send_ppm_command_() {
   ESP_LOGD(TAG, "Sent PPM Request");
 }
 
+void T6713Component::scan_modbus(uint8_t address) {
+  this->command_time_ = millis();
+  this->command_ = T6713Command::GET_VERSION;
+  T6713_ADDR_SENSOR = address;
+  send_read_command_(T6713_READ_FUNCTION, T6713_FIRMWARE_REGISTER, 1);
+  ESP_LOGD(TAG, "Sent Firmware Request");
+}
+
 void T6713Component::loop() {
   if (this->available() < 5) {
     if (this->command_ == T6713Command::GET_PPM && millis() - this->command_time_ > T6713_TIMEOUT) {
+      failCount++;
       ESP_LOGD(TAG, "T6713 Received %i", this->available());
       /* command got eaten, clear the buffer and fire another */
       while (this->available())
         this->read();
+      if(failCount >= 5){
+        failCount = 0;
+        this->scan_modbus(failCount);
+        return;
+      }
       this->send_ppm_command_();
+    }
+    if (this->command_ == T6713Command::GET_VERSION && millis() - this->command_time_ > T6713_TIMEOUT) {
+      failCount++;
+      ESP_LOGD(TAG, "T6713 Received %i", this->available());
+      /* command got eaten, clear the buffer and fire another */
+      while (this->available())
+        this->read();
+      if(failCount >= 5){
+        this->scan_modbus();
+        return;
+      }
+      this->scan_modbus(failCount);
     }
     return;
   }
@@ -113,6 +142,12 @@ void T6713Component::loop() {
       const uint16_t ppm = encode_uint16(response_buffer[3], response_buffer[4]);
       ESP_LOGD(TAG, "T6713 Received CO₂=%uppm", ppm);
       this->co2_sensor_->publish_state(ppm);
+      break;
+    }
+    case T6713Command::GET_VERSION: {
+      ESP_LOGD(TAG, "T6713 Detected at %i", failCount);
+      failCoint = 0;
+      this->send_ppm_command_();
       break;
     }
     default:
