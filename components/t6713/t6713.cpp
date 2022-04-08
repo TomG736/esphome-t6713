@@ -84,7 +84,7 @@ void T6713Component::scan_modbus(uint8_t address) {
   this->command_ = T6713Command::GET_VERSION;
   T6713_ADDR_SENSOR = address;
   send_read_command_(T6713_READ_FUNCTION, T6713_FIRMWARE_REGISTER, 1);
-  ESP_LOGD(TAG, "Sent Firmware Request");
+  ESP_LOGD(TAG, "Sent Firmware Request to %i", T6713_ADDR_SENSOR);
 }
 
 void T6713Component::loop() {
