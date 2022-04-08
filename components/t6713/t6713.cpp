@@ -63,8 +63,9 @@ void T6713Component::send_read_command_(uint8_t function_code, uint16_t register
   message[5] = LSB(readLen);
   messageLen = 6;
   crc = ModRTU_CRC(message, messageLen);
-  message[6] = MSB(crc);
-  message[7] = LSB(crc);
+  message[6] = LSB(crc);
+  message[7] = MSB(crc);
+  messageLen += 2;
   this->write_array(message, messageLen);
 }
 
