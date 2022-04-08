@@ -34,8 +34,8 @@ void T6713Component::send_ppm_command_() {
 
 void T6713Component::loop() {
   if (this->available() < 5) {
-    ESP_LOGD(TAG, "T6713 Received %i", this->available());
     if (this->command_ == T6713Command::GET_PPM && millis() - this->command_time_ > T6713_TIMEOUT) {
+      ESP_LOGD(TAG, "T6713 Received %i", this->available());
       /* command got eaten, clear the buffer and fire another */
       while (this->available())
         this->read();
